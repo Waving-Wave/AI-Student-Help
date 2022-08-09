@@ -3,6 +3,7 @@ import os
 import openai
 from torch import true_divide
 from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QPushButton
 import sys
 import random
 
@@ -22,7 +23,7 @@ class MyWidget(QtWidgets.QWidget):
         self.title = QtWidgets.QLabel("Prompt:",
                                      alignment=QtCore.Qt.AlignCenter)
 
-        self.textbox = QtWidgets.QTextEdit()
+        self.textbox = QLineEdit("")
         self.textbox.setMinimumSize(800, 100)
         self.textbox.setMaximumSize(800, 100)
         self.textbox.resize(800,100)
@@ -38,7 +39,8 @@ class MyWidget(QtWidgets.QWidget):
     @QtCore.Slot()
     def magic(self):
       #ERROR HERE, FIX NOT RECIEVING STRING
-      promptMessage = self.textbox.toPlainText
+      promptMessage = f"{self.textbox.text()}"
+      print(promptMessage)
       self.text.setText(AICall(promptMessage))
 
 app = QtWidgets.QApplication([])
