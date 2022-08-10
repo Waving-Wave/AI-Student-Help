@@ -38,7 +38,6 @@ class MyWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def magic(self):
-      #ERROR HERE, FIX NOT RECIEVING STRING
       promptMessage = f"{self.textbox.text()}"
       print(promptMessage)
       self.text.setText(AICall(promptMessage))
@@ -56,7 +55,7 @@ widget.show()
 
 def AICall(promptMessage):
   #Sets my OpenAI unique key, account reqiured to submit prompts
-  openai.api_key = "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"
+  openai.api_key = "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"
 
   #Send the pre-set information to the OpenAI server to return the text completion
   response = openai.Completion.create(
@@ -69,7 +68,8 @@ def AICall(promptMessage):
     presence_penalty=0
   )
 
-  #This eliminates all the outside information that is given as a response by the OpenAI completion
-  print(response["choices"][0]["text"])
+  #This eliminates all the outside information that is given as a response by the OpenAI completion and converts reponse to a string
+  response = response["choices"][0]["text"]
+  response = str(response)
   return response
 sys.exit(app.exec())
