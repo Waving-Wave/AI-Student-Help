@@ -3,29 +3,46 @@ import os
 import openai
 from torch import true_divide
 from PySide6 import QtCore, QtWidgets, QtGui
-from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QPushButton, QMainWindow, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QPushButton, QMainWindow, QLabel, QVBoxLayout, QWidget, QSlider
 import sys
+import PySide6
+from PySide6 import QtCore
+from PyQt6.QtCore import Qt
 import random
 
-#Update comments
+#Maybe add randomness
 
 #Makes the setting menu using similar methods to main window but does not show it
 class AnotherWindow(QWidget):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
-        self.label = QLabel("Please enter maximum prompt reply length (In characters; whole positive numbers between 1-4000 only):")
+        self.label2 = QLabel("Please enter maximum answer length \n(In characters; whole positive numbers between 1-4000 only):")
         self.textbox2 = QLineEdit("")
         self.textbox2.setMinimumSize(50, 20)
         self.textbox2.setMaximumSize(50, 20)
         self.textbox2.resize(50,20)
-        self.button2 = QtWidgets.QPushButton("Submit")
 
-        layout.addWidget(self.label)
+        self.button2 = QtWidgets.QPushButton("Submit")
+        self.button2.setMinimumSize(50, 20)
+        self.button2.setMaximumSize(50, 20)
+        self.button2.resize(50, 20)
+
+
+        #WORKING HERE, SLIDER NOT MOVING
+        self.label3 = QLabel("Testing below:")
+        self.slider = QSlider(PySide6.QtCore.Qt.Orientation.Horizontal)
+        self.slider.setRange(0,100)
+        self.slider.setSingleStep(10)
+
+        layout.addWidget(self.label2)
         layout.addWidget(self.textbox2)
         layout.addWidget(self.button2)
+        layout.addWidget(self.label3)
+        layout.addWidget(self.slider)
         self.setLayout(layout)
 
+        self.slider.valueChanged.connect(self.value_changed)
         self.button2.clicked.connect(self.updateRLength)
 
     #Updates the rLength file with the new token length, then closes settings window
@@ -35,33 +52,50 @@ class AnotherWindow(QWidget):
       f.write(f"{self.textbox2.text()}")
       f.close()
       self.close()
+    
+    def value_changed(self, i):
+      f = open("randomVal.txt", "w")
+      f.write(str(i))
+      f.close()
 
 #Makes and orders widgets and parameters for the main window
 class MyWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        #Sets up the buttons and display text
+        #Sets up the buttons
         self.button = QtWidgets.QPushButton("Submit")
+        self.button.setMinimumSize(50, 20)
+        self.button.setMaximumSize(50, 20)
+        self.button.resize(50, 20)
+
         self.settingsButton = QtWidgets.QPushButton("Settings")
-        self.text = QtWidgets.QLabel("AI Text Here",
+        self.settingsButton.setMinimumSize(50, 25)
+        self.settingsButton.setMaximumSize(50, 25)
+        self.settingsButton.resize(50, 30)
+
+        #Set up the text groups
+        self.text = QtWidgets.QLabel("",
                                      alignment=QtCore.Qt.AlignCenter)
-        self.title = QtWidgets.QLabel("Prompt:",
+        self.title = QtWidgets.QLabel("Question:",
                                      alignment=QtCore.Qt.AlignCenter)
+        self.title.setStyleSheet(
+        "font-size: 20px;"
+        )
 
         #Sets up textbox and defines its dimensions
         self.textbox = QLineEdit("")
-        self.textbox.setMinimumSize(800, 100)
-        self.textbox.setMaximumSize(800, 100)
-        self.textbox.resize(800,100)
+        self.textbox.setMinimumSize(400, 60)
+        self.textbox.setMaximumSize(400, 60)
+        self.textbox.resize(400,80)
 
         #Adds the widgets in the order they'll appear on the page
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.settingsButton)
         self.layout.addWidget(self.title)
         self.layout.addWidget(self.textbox)
+        self.layout.addWidget(self.button, alignment=QtCore.Qt.AlignCenter)
         self.layout.addWidget(self.text)
-        self.layout.addWidget(self.button)
 
         #Sets up the link between the buttons and the functions they call
         self.button.clicked.connect(self.magic)
@@ -82,7 +116,7 @@ class MyWidget(QWidget):
 app = QtWidgets.QApplication([])
 
 widget = MyWidget()
-widget.resize(800, 600)
+widget.resize(400, 300)
 widget.show()
 
 #Called by 'magic' to get the AI response to display
@@ -112,6 +146,11 @@ def AICall(promptMessage):
   response = response["choices"][0]["text"]
   response = str(response)
   return response
+
+#Opens and sets the stylesheet
+with open("style.qss", "r") as f:
+  _style = f.read()
+  app.setStyleSheet(_style)
 
 #Runs the app with the program halting if the app is closed
 sys.exit(app.exec())
