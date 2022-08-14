@@ -10,7 +10,7 @@ from PySide6 import QtCore
 from PyQt6.QtCore import Qt
 import random
 
-#Add larger titles on settings page by making seperate labels for brackets
+#Implement use of randomness from file into the info given to the AI for response
 
 #Makes the setting menu using similar methods to main window but does not show it
 class AnotherWindow(QWidget):
@@ -90,7 +90,10 @@ class AnotherWindow(QWidget):
     
     def value_changed(self, i):
       f = open("randomVal.txt", "w")
-      f.write(str(i))
+      if i == 10 or i == 0:
+        f.write(str(i))
+      else:
+        f.write("0." + str(i))
       f.close()
 
     def settingsClose(self):
