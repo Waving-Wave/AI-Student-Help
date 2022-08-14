@@ -17,7 +17,7 @@ class AnotherWindow(QWidget):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
-        self.label2 = QLabel("Please enter maximum answer length \n(In characters; whole positive numbers between 1-4000 only):")
+        self.label2 = QLabel("Maximum answer length \n(In characters; whole positive numbers between 1-4000 only):")
         self.textbox2 = QLineEdit("")
         self.textbox2.setMinimumSize(50, 20)
         self.textbox2.setMaximumSize(50, 20)
@@ -28,22 +28,42 @@ class AnotherWindow(QWidget):
         self.button2.setMaximumSize(50, 20)
         self.button2.resize(50, 20)
 
+        self.labelSuccess = QLabel("\n")
+        self.labelSuccessMessage = QLabel("\n")
 
-        #WORKING HERE, SLIDER NOT MOVING
-        self.label3 = QLabel("Testing below:")
+        #Slider to determine randomness, labels are separate
+        self.label3 = QLabel("Answer Randomness \n(Lower number = More Logical; Higher Number = More Creative):")
         self.slider = QSlider(PySide6.QtCore.Qt.Orientation.Horizontal)
-        self.slider.setRange(0,100)
-        self.slider.setSingleStep(10)
+        self.slider.setRange(0,10)
+        self.slider.setSingleStep(1)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.slider.setTickInterval(1)
+        self.slider.setMinimumSize(300, 20)
+        self.slider.setMaximumSize(300, 20)
+        self.label4 = QLabel("0       1       2       3      4       5      6       7       8       9      10")
+        self.spacing = QLabel("\n\n")
+
+
+        self.button3 = QtWidgets.QPushButton("Exit")
+        self.button3.setMinimumSize(40, 20)
+        self.button3.setMaximumSize(40, 20)
+        self.button3.resize(40, 20)
 
         layout.addWidget(self.label2)
         layout.addWidget(self.textbox2)
         layout.addWidget(self.button2)
+        layout.addWidget(self.labelSuccess)
+        layout.addWidget(self.labelSuccessMessage)
         layout.addWidget(self.label3)
         layout.addWidget(self.slider)
+        layout.addWidget(self.label4)
+        layout.addWidget(self.spacing)
+        layout.addWidget(self.button3)
         self.setLayout(layout)
 
         self.slider.valueChanged.connect(self.value_changed)
         self.button2.clicked.connect(self.updateRLength)
+        self.button3.clicked.connect(self.settingsClose)
 
     #Updates the rLength file with the new token length, then closes settings window
     @QtCore.Slot()
@@ -51,12 +71,19 @@ class AnotherWindow(QWidget):
       f = open("rLength.txt", "w")
       f.write(f"{self.textbox2.text()}")
       f.close()
-      self.close()
+      self.labelSuccess.setText("Success!")
+      self.labelSuccess.setStyleSheet(
+        "font-size: 20px;"
+        )
+      self.labelSuccessMessage.setText("(Please close then reopen settings\n menu to update answer length again)\n")
     
     def value_changed(self, i):
       f = open("randomVal.txt", "w")
       f.write(str(i))
       f.close()
+
+    def settingsClose(self):
+      self.close()
 
 #Makes and orders widgets and parameters for the main window
 class MyWidget(QWidget):
