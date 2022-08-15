@@ -3,7 +3,7 @@ import os
 import openai
 from torch import true_divide
 from PySide6 import QtCore, QtWidgets, QtGui
-from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QPushButton, QMainWindow, QLabel, QVBoxLayout, QWidget, QSlider
+from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QPushButton, QMainWindow, QLabel, QVBoxLayout, QWidget, QSlider, QTextEdit
 import sys
 import PySide6
 from PySide6 import QtCore
@@ -116,26 +116,32 @@ class MyWidget(QWidget):
         self.settingsButton.resize(50, 30)
 
         #Set up the text groups
-        self.text = QtWidgets.QLabel("",
-                                     alignment=QtCore.Qt.AlignCenter)
-        self.title = QtWidgets.QLabel("Question:",
-                                     alignment=QtCore.Qt.AlignCenter)
+        self.spacing2 = QLabel("\n\n AI Answer:", alignment=QtCore.Qt.AlignCenter)
+        self.text = QTextEdit("", alignment=QtCore.Qt.AlignCenter)
+        self.text.setReadOnly(True)
+        self.text.setMaximumWidth(415)
+
+        self.title = QLabel("Question:", alignment=QtCore.Qt.AlignCenter)
         self.title.setStyleSheet(
         "font-size: 20px;"
         )
+        self.title.setMaximumWidth(415)
 
         #Sets up textbox and defines its dimensions
         self.textbox = QLineEdit("")
-        self.textbox.setMinimumSize(400, 60)
-        self.textbox.setMaximumSize(400, 60)
+        self.textbox.setMinimumSize(400, 30)
+        self.textbox.setMaximumSize(400, 30)
         self.textbox.resize(400,80)
 
-        #Adds the widgets in the order they'll appear on the page
+        #Adds the widgets in the order they'll appear on the page, along with other parameters around the window
         self.layout = QtWidgets.QVBoxLayout(self)
+        self.setMinimumWidth(425)
+        self.setMaximumWidth(425)
         self.layout.addWidget(self.settingsButton)
         self.layout.addWidget(self.title)
         self.layout.addWidget(self.textbox)
         self.layout.addWidget(self.button, alignment=QtCore.Qt.AlignCenter)
+        self.layout.addWidget(self.spacing2)
         self.layout.addWidget(self.text)
         self.setWindowTitle("AI Student Help")
 
@@ -147,7 +153,7 @@ class MyWidget(QWidget):
     @QtCore.Slot()
     def magic(self):
       promptMessage = f"{self.textbox.text()}"
-      self.text.setText("Response: " + "\n" + AICall(promptMessage))
+      self.text.setText(AICall(promptMessage))
 
     #Shows the (already defined) settings screen
     def settings(self):
