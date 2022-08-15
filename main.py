@@ -10,7 +10,6 @@ from PySide6 import QtCore
 from PyQt6.QtCore import Qt
 import random
 
-#Fix prompt being too wide
 
 #Makes the setting menu using similar methods to main window but does not show it
 class AnotherWindow(QWidget):
@@ -45,6 +44,19 @@ class AnotherWindow(QWidget):
         self.slider.setRange(0,10)
         self.slider.setSingleStep(1)
         self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        
+        #Opens the file to get the random value, it's set to 0 by default, the sets the slider to the last num given
+        f = open("randomVal.txt", "r")
+        randomnessVal = (float(f.read()))
+        if randomnessVal == 0 or randomnessVal == 10:
+          randomnessVal = int(randomnessVal)
+        else:
+          randomnessVal = str(randomnessVal)
+          randomnessVal = randomnessVal[2]
+          randomnessVal = int(randomnessVal)
+        f.close()
+
+        self.slider.setValue(randomnessVal)
         self.slider.setTickInterval(1)
         self.slider.setMinimumSize(300, 20)
         self.slider.setMaximumSize(300, 20)
@@ -180,6 +192,8 @@ def AICall(promptMessage):
 
   f = open("randomVal.txt", "r")
   randomnessVal = (float(f.read()))
+  if randomnessVal == 10.0:
+    randomnessVal = 1.0
   print(randomnessVal)
   f.close()
   
