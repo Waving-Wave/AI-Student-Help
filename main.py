@@ -10,7 +10,7 @@ from PySide6 import QtCore
 from PyQt6.QtCore import Qt
 import random
 
-#Implement use of randomness from file into the info given to the AI for response
+#Fix prompt being too wide
 
 #Makes the setting menu using similar methods to main window but does not show it
 class AnotherWindow(QWidget):
@@ -166,23 +166,28 @@ def AICall(promptMessage):
   #Sets my OpenAI unique key, account reqiured to submit prompts
   openai.api_key = "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"
 
-  #Opens the rLength files and reads it, setting the tokenMax to the value
+  #Opens the rLength and randomVal files and reads it, setting the variables to the value
   f = open("rLength.txt", "r")
   tokenMax = (int(f.read()))
   print(tokenMax)
+  f.close()
+
+  f = open("randomVal.txt", "r")
+  randomnessVal = (float(f.read()))
+  print(randomnessVal)
+  f.close()
+  
 
   #Send the pre-set information to the OpenAI server to return the text completion
   response = openai.Completion.create(
     model="text-davinci-002",
-    prompt=promptMessage,
-    temperature=0.7,
-    max_tokens= tokenMax,
+    prompt = promptMessage,
+    temperature = randomnessVal,
+    max_tokens = tokenMax,
     top_p=1,
     frequency_penalty=0,
     presence_penalty=0
   )
-  #Closes the opened file
-  f.close()
 
   #This eliminates all the outside information that is given as a response by the OpenAI completion and converts reponse to a string
   response = response["choices"][0]["text"]
