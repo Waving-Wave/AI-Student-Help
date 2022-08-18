@@ -28,7 +28,6 @@ class Worker(QObject):
     def run(self):
         for i in range(30):
             time.sleep(1)
-            print(i)
         self.finished.emit()
 
 #Makes the setting menu using similar methods to main window but does not show it
@@ -191,6 +190,7 @@ class MyWidget(QWidget):
     def magic(self):
       promptMessage = f"{self.textbox.text()}"
       self.text.setText(AICall(promptMessage))
+      self.text.setTextInteractionFlags (QtCore.Qt.NoTextInteraction) 
       #Create a QThread object
       self.thread = QThread()
       #Create a worker object
@@ -221,7 +221,6 @@ class MyWidget(QWidget):
 
 #Defines the app and sets the main screen to show upon running the app
 app = QtWidgets.QApplication([])
-
 widget = MyWidget()
 widget.resize(400, 300)
 widget.show()
