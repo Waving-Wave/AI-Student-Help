@@ -11,22 +11,21 @@ from PySide6 import QtCore
 from PyQt6.QtCore import Qt, QObject, QThread, pyqtSignal
 import time
 
-global startTime
-global timeLimit
-timeLimit = 100000000000000000000000.0
-startTime = time.time()
+#Just make quality of life changes, maybe check implications, otherwise written work?
+#Maybe add text under greyed out button while timer runs to inform user of time left
 
-
-#Make a second python file to run the timer seperate from this file? If not, timer may need to be scrapped
-
-
+global timerNum
 #Makes a worker thread to make a subprocess processing separte from the main file to prevent freeze when
 #using the timer (to prevent copying)
 class Worker(QObject):
     finished = pyqtSignal()
+    progress = pyqtSignal(int)
 
     def run(self):
         for i in range(30):
+            global timerNum
+            self.progress.emit(i)
+            timerNum = i
             time.sleep(1)
         self.finished.emit()
 
@@ -145,6 +144,8 @@ class MyWidget(QWidget):
         self.button.setMaximumSize(50, 20)
         self.button.resize(50, 20)
 
+        self.timerText = QLabel("\n", alignment=QtCore.Qt.AlignCenter)
+
         self.settingsButton = QtWidgets.QPushButton("Settings")
         self.settingsButton.setMinimumSize(50, 25)
         self.settingsButton.setMaximumSize(50, 25)
@@ -176,6 +177,7 @@ class MyWidget(QWidget):
         self.layout.addWidget(self.title)
         self.layout.addWidget(self.textbox)
         self.layout.addWidget(self.button, alignment=QtCore.Qt.AlignCenter)
+        self.layout.addWidget(self.timerText)
         self.layout.addWidget(self.spacing2)
         self.layout.addWidget(self.text)
         self.setWindowTitle("AI Student Help")
@@ -210,14 +212,25 @@ class MyWidget(QWidget):
       self.thread.finished.connect(
           lambda: self.button.setEnabled(True)
       )
+      #Fix the label not being able to be called; https://realpython.com/python-pyqt-qthread/#using-qthread-to-prevent-freezing-guis
       self.thread.finished.connect(
           lambda: self.text.setText("")
+      )
+
+      self.thread.finished.connect(
+          lambda: self.timerText.setText("")
+      )
+
+      global timerNum
+      self.worker.progress.connect(
+        lambda: self.timerText.setText("Time left: " + str(30 - timerNum))
       )
 
     #Shows the (already defined) settings screen
     def settings(self):
         self.w = AnotherWindow()
         self.w.show()
+
 
 #Defines the app and sets the main screen to show upon running the app
 app = QtWidgets.QApplication([])
