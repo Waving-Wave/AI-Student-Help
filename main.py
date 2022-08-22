@@ -3,16 +3,15 @@ import os
 from tracemalloc import start
 import openai
 from torch import true_divide
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QPushButton, QMainWindow, QLabel, QVBoxLayout, QWidget, QSlider, QTextEdit
 import sys
 import PySide6
 from PySide6 import QtCore
 from PyQt6.QtCore import Qt, QObject, QThread, pyqtSignal
 import time
+from PySide6.QtGui import QIntValidator
 
-#Just make quality of life changes, maybe check implications, otherwise written work?
-#Maybe add text under greyed out button while timer runs to inform user of time left
 
 global timerNum
 #Makes a worker thread to make a subprocess processing separte from the main file to prevent freeze when
@@ -43,11 +42,15 @@ class AnotherWindow(QWidget):
         self.textbox2.setMinimumSize(50, 20)
         self.textbox2.setMaximumSize(50, 20)
         self.textbox2.resize(50,20)
+        onlyInt = QIntValidator()
+        onlyInt.setRange(1, 4000)
+        self.textbox2.setValidator(onlyInt)
 
         self.button2 = QtWidgets.QPushButton("Submit")
         self.button2.setMinimumSize(50, 20)
         self.button2.setMaximumSize(50, 20)
         self.button2.resize(50, 20)
+        self.button2.setEnabled(True)
 
         #These labels are blank now but act as spacing until the button is pressed,
         #after that they change to a success message
@@ -113,14 +116,23 @@ class AnotherWindow(QWidget):
     #Updates the rLength file with the new token length, then closes settings window
     @QtCore.Slot()
     def updateRLength(self):
-      f = open("rLength.txt", "w")
-      f.write(f"{self.textbox2.text()}")
-      f.close()
-      self.labelSuccess.setText("Success!")
-      self.labelSuccess.setStyleSheet(
+      if int(f"{self.textbox2.text()}") > 4000:
+        self.labelSuccess.setText("Error")
+        self.labelSuccess.setStyleSheet(
         "font-size: 20px;"
         )
-      self.labelSuccessMessage.setText("(Please close then reopen settings\n menu to update answer length again)\n")
+        self.labelSuccessMessage.setText("(Please close then reopen settings\n menu to tryagain)\n")
+        self.button2.setEnabled(False)
+      else:
+        f = open("rLength.txt", "w")
+        f.write(f"{self.textbox2.text()}")
+        f.close()
+        self.labelSuccess.setText("Success!")
+        self.labelSuccess.setStyleSheet(
+          "font-size: 20px;"
+          )
+        self.labelSuccessMessage.setText("(Please close then reopen settings\n menu to update answer length again)\n")
+        self.button2.setEnabled(False)
     
     def value_changed(self, i):
       f = open("randomVal.txt", "w")
