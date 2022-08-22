@@ -121,7 +121,7 @@ class AnotherWindow(QWidget):
         self.labelSuccess.setStyleSheet(
         "font-size: 20px;"
         )
-        self.labelSuccessMessage.setText("(Please close then reopen settings\n menu to tryagain)\n")
+        self.labelSuccessMessage.setText("(Please close then reopen settings\n menu to try again)\n")
         self.button2.setEnabled(False)
       else:
         f = open("rLength.txt", "w")
