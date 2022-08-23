@@ -12,8 +12,8 @@ from PyQt6.QtCore import Qt, QObject, QThread, pyqtSignal
 import time
 from PySide6.QtGui import QIntValidator
 
-
 global timerNum
+
 #Makes a worker thread to make a subprocess processing separte from the main file to prevent freeze when
 #using the timer (to prevent copying)
 class Worker(QObject):
@@ -27,6 +27,14 @@ class Worker(QObject):
             timerNum = i
             time.sleep(1)
         self.finished.emit()
+
+#Makes a second worker thread so that the success message can disappear after 1 second without stalling
+class Worker2(QObject):
+    finished = pyqtSignal()
+
+    def run(self):
+      time.sleep(3)
+      self.finished.emit()
 
 #Makes the setting menu using similar methods to main window but does not show it
 class AnotherWindow(QWidget):
@@ -52,9 +60,15 @@ class AnotherWindow(QWidget):
         self.button2.resize(50, 20)
         self.button2.setEnabled(True)
 
-        #These labels are blank now but act as spacing until the button is pressed,
-        #after that they change to a success message
-        self.labelSuccess = QLabel("\n")
+        #The latter label is blank now but will act as spacing until the button is pressed,
+        #after that it changes to a success message
+        f = open("rLength.txt", "r")
+        tokenNum = (str(f.read()))
+        self.labelSuccess = QLabel("Current max answer length: " + tokenNum + " characters\n")
+        f.close()
+        self.labelSuccess.setStyleSheet(
+        "font-size: 12px;"
+        )
         self.labelSuccessMessage = QLabel("\n")
 
         #Slider to determine randomness, labels are separate
@@ -117,23 +131,57 @@ class AnotherWindow(QWidget):
     @QtCore.Slot()
     def updateRLength(self):
       if int(f"{self.textbox2.text()}") > 4000:
-        self.labelSuccess.setText("Error")
+        self.labelSuccess.setText("Error - Invalid Input")
         self.labelSuccess.setStyleSheet(
         "font-size: 20px;"
         )
-        self.labelSuccessMessage.setText("(Please close then reopen settings\n menu to try again)\n")
+        self.labelSuccessMessage.setText("(Please close then reopen settings menu to try again)\n\n")
         self.button2.setEnabled(False)
       else:
         f = open("rLength.txt", "w")
         f.write(f"{self.textbox2.text()}")
         f.close()
+        f = open("rLength.txt", "r")
+        tokenNum = (str(f.read()))
         self.labelSuccess.setText("Success!")
         self.labelSuccess.setStyleSheet(
           "font-size: 20px;"
           )
-        self.labelSuccessMessage.setText("(Please close then reopen settings\n menu to update answer length again)\n")
+        self.labelSuccessMessage.setText("Current max answer length: " + tokenNum + " characters\n\n")
+        f.close()
+        #Prevents user from double opening the thread
         self.button2.setEnabled(False)
-    
+
+        #individual aspects explained in main window for threading
+        self.thread = QThread()
+        self.worker2 = Worker2()
+        
+        self.worker2.moveToThread(self.thread)
+        
+        self.thread.started.connect(self.worker2.run)
+        self.worker2.finished.connect(self.thread.quit)
+        self.worker2.finished.connect(self.worker2.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+
+        self.thread.start()
+
+        self.thread.finished.connect(
+          lambda: self.secondUpdate()
+        )
+
+    #Updates the labels after the thread has finished the timer
+    def secondUpdate(self):
+      f = open("rLength.txt", "r")
+      tokenNum = (str(f.read()))
+      self.labelSuccess.setText("Current max answer length: " + tokenNum + " characters\n")
+      f.close()
+      self.labelSuccess.setStyleSheet(
+      "font-size: 12px;"
+      )
+      self.labelSuccessMessage.setText("\n")
+      self.button2.setEnabled(True)
+
+    #Updates the randomVal file
     def value_changed(self, i):
       f = open("randomVal.txt", "w")
       if i == 10 or i == 0:
@@ -165,6 +213,9 @@ class MyWidget(QWidget):
 
         #Set up the text groups
         self.spacing2 = QLabel("\n\n AI Answer:", alignment=QtCore.Qt.AlignCenter)
+        self.spacing2.setStyleSheet(
+        "font-size: 18px;"
+        )
         self.text = QTextEdit("", alignment=QtCore.Qt.AlignCenter)
         self.text.setReadOnly(True)
         self.text.setMaximumWidth(415)
