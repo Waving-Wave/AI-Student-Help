@@ -1,6 +1,7 @@
 from curses import echo
 import os
 from tracemalloc import start
+from unicodedata import numeric
 import openai
 from torch import true_divide
 from PySide6 import QtCore, QtWidgets
@@ -13,6 +14,21 @@ import time
 from PySide6.QtGui import QIntValidator
 
 global timerNum
+
+#This checks if the files are blank, if they are, they are assigned default values
+#Put it in a function so I can collaspe it to look nice in my IDE
+def fileCheck():
+  f = open("rLength.txt", "r+")
+  numCheck = (str(f.read()))
+  if numCheck == "":
+    f.write("256")
+  f.close()
+  f = open("randomVal.txt", "r+")
+  floatCheck = (str(f.read()))
+  if floatCheck == "":
+    f.write("0.7")
+  f.close()
+fileCheck()
 
 #Makes a worker thread to make a subprocess processing separte from the main file to prevent freeze when
 #using the timer (to prevent copying)
@@ -41,7 +57,7 @@ class AnotherWindow(QWidget):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
-        self.label2 = QLabel("Maximum answer length")
+        self.label2 = QLabel("Maximum answer length:")
         self.label2.setStyleSheet(
         "font-size: 20px;"
         )
@@ -69,10 +85,10 @@ class AnotherWindow(QWidget):
         self.labelSuccess.setStyleSheet(
         "font-size: 12px;"
         )
-        self.labelSuccessMessage = QLabel("\n")
+        self.labelSuccessMessage = QLabel("")
 
         #Slider to determine randomness, labels are separate
-        self.label3 = QLabel("Answer Randomness")
+        self.label3 = QLabel("Answer Randomness:")
         self.label3.setStyleSheet(
         "font-size: 20px;"
         )
@@ -100,14 +116,20 @@ class AnotherWindow(QWidget):
         self.label4 = QLabel("0       1       2       3      4       5      6       7       8       9      10")
         #Spacing labels are used to introduce space between widgets,
         #this limits use of anchoring which makes the program less flexible
-        self.spacing = QLabel("\n\n")
+        self.spacing = QLabel("\n")
 
 
         self.button3 = QtWidgets.QPushButton("Exit")
-        self.button3.setMinimumSize(40, 20)
-        self.button3.setMaximumSize(40, 20)
-        self.button3.resize(40, 20)
+        self.button3.setMinimumSize(40, 25)
+        self.button3.setMaximumSize(40, 25)
+        self.button3.resize(40, 25)
 
+        self.buttonDefault = QtWidgets.QPushButton("Reset Settings")
+        self.buttonDefault.setMinimumSize(90, 25)
+        self.buttonDefault.setMaximumSize(90, 25)
+        self.buttonDefault.resize(90, 25)
+
+        layout.addWidget(self.buttonDefault)
         layout.addWidget(self.label2)
         layout.addWidget(self.label5)
         layout.addWidget(self.textbox2)
@@ -126,6 +148,7 @@ class AnotherWindow(QWidget):
         self.slider.valueChanged.connect(self.value_changed)
         self.button2.clicked.connect(self.updateRLength)
         self.button3.clicked.connect(self.settingsClose)
+        self.buttonDefault.clicked.connect(self.defaultSettings)
 
     #Updates the rLength file with the new token length, then closes settings window
     @QtCore.Slot()
@@ -147,12 +170,13 @@ class AnotherWindow(QWidget):
         self.labelSuccess.setStyleSheet(
           "font-size: 20px;"
           )
-        self.labelSuccessMessage.setText("Current max answer length: " + tokenNum + " characters\n\n")
+        self.labelSuccessMessage.setText("Current max answer length: " + tokenNum + " characters\n")
         f.close()
         #Prevents user from double opening the thread
         self.button2.setEnabled(False)
+        self.buttonDefault.setEnabled(False)
 
-        #individual aspects explained in main window for threading
+        #Individual aspects explained in main window for threading
         self.thread = QThread()
         self.worker2 = Worker2()
         
@@ -180,6 +204,7 @@ class AnotherWindow(QWidget):
       )
       self.labelSuccessMessage.setText("\n")
       self.button2.setEnabled(True)
+      self.buttonDefault.setEnabled(True)
 
     #Updates the randomVal file
     def value_changed(self, i):
@@ -189,7 +214,19 @@ class AnotherWindow(QWidget):
       else:
         f.write("0." + str(i))
       f.close()
+    
+    #The default settings function, sets the settings to the default value
+    def defaultSettings(self):
+      f = open("rLength.txt", "w")
+      f.write("256")
+      f.close()
+      f = open("randomVal.txt", "w")
+      f.write("0.7")
+      f.close()
+      self.slider.setValue(7)
+      self.labelSuccess.setText("Current max answer length: 256 characters\n")
 
+    
     def settingsClose(self):
       self.close()
 
@@ -209,7 +246,7 @@ class MyWidget(QWidget):
         self.settingsButton = QtWidgets.QPushButton("Settings")
         self.settingsButton.setMinimumSize(50, 25)
         self.settingsButton.setMaximumSize(50, 25)
-        self.settingsButton.resize(50, 30)
+        self.settingsButton.resize(50, 25)
 
         #Set up the text groups
         self.spacing2 = QLabel("\n\n AI Answer:", alignment=QtCore.Qt.AlignCenter)
@@ -275,7 +312,7 @@ class MyWidget(QWidget):
       self.thread.finished.connect(
           lambda: self.button.setEnabled(True)
       )
-      #Fix the label not being able to be called; https://realpython.com/python-pyqt-qthread/#using-qthread-to-prevent-freezing-guis
+      
       self.thread.finished.connect(
           lambda: self.text.setText("")
       )
@@ -293,7 +330,6 @@ class MyWidget(QWidget):
     def settings(self):
         self.w = AnotherWindow()
         self.w.show()
-
 
 #Defines the app and sets the main screen to show upon running the app
 app = QtWidgets.QApplication([])
