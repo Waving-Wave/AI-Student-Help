@@ -1,22 +1,29 @@
 from curses import echo
-import os
 from tracemalloc import start
 from unicodedata import numeric
 import openai
 from torch import true_divide
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QPushButton, QMainWindow, QLabel, QVBoxLayout, QWidget, QSlider, QTextEdit
+from PySide6.QtWidgets import QLineEdit, QLabel, QVBoxLayout, QWidget, QSlider, QTextEdit
 import sys
 import PySide6
 from PySide6 import QtCore
-from PyQt6.QtCore import Qt, QObject, QThread, pyqtSignal
+from PyQt6.QtCore import QObject, QThread, pyqtSignal
 import time
 from PySide6.QtGui import QIntValidator
 
+#This is a program designed to help students study. It allows students to ask a question and it returns a 
+#(uncopyable) response from the OpenAI Da Vinci text completion AI, done using a private key owned by Elliot Bolter. 
+#It also features adjustable settings which allow for a user to set how random or long their answer is.
+#Made by Elliot Bolter, Y13, Scots College.
+
+
+
+#Defines timerNum, which is global because it needs to be accessable between the worker and the window class
 global timerNum
 
 #This checks if the files are blank, if they are, they are assigned default values
-#Put it in a function so I can collaspe it to look nice in my IDE
+#I put it in a function so I can collaspe it to look nice/easy to manage in my IDE
 def fileCheck():
   f = open("rLength.txt", "r+")
   numCheck = (str(f.read()))
@@ -31,7 +38,7 @@ def fileCheck():
 fileCheck()
 
 #Makes a worker thread to make a subprocess processing separte from the main file to prevent freeze when
-#using the timer (to prevent copying)
+#using the timer (to prevent copying), emits progress each second
 class Worker(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(int)
@@ -45,6 +52,7 @@ class Worker(QObject):
         self.finished.emit()
 
 #Makes a second worker thread so that the success message can disappear after 1 second without stalling
+#Just waits a second before starting a function in the window
 class Worker2(QObject):
     finished = pyqtSignal()
 
@@ -52,7 +60,8 @@ class Worker2(QObject):
       time.sleep(3)
       self.finished.emit()
 
-#Makes the setting menu using similar methods to main window but does not show it
+#Makes the setting menu using similar methods to main window
+#If a function/unclear section of code is not explained here, it will be explained in the main function
 class AnotherWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -176,7 +185,7 @@ class AnotherWindow(QWidget):
         self.button2.setEnabled(False)
         self.buttonDefault.setEnabled(False)
 
-        #Individual aspects explained in main window for threading
+        #Individual aspects of the threading process are explained in main window for threading (line 308+)
         self.thread = QThread()
         self.worker2 = Worker2()
         
@@ -235,7 +244,7 @@ class MyWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        #Sets up the buttons
+        #Makes (but does not show) a button widget and defines its parameters
         self.button = QtWidgets.QPushButton("Submit")
         self.button.setMinimumSize(50, 20)
         self.button.setMaximumSize(50, 20)
@@ -248,11 +257,13 @@ class MyWidget(QWidget):
         self.settingsButton.setMaximumSize(50, 25)
         self.settingsButton.resize(50, 25)
 
-        #Set up the text groups
+        #Makes a label which displays texts and defines its parameters (font is defined globally in style.qss)
         self.spacing2 = QLabel("\n\n AI Answer:", alignment=QtCore.Qt.AlignCenter)
         self.spacing2.setStyleSheet(
         "font-size: 18px;"
         )
+
+        #Sets up a textbox to display the AI answer, this textbox cannot be written in
         self.text = QTextEdit("", alignment=QtCore.Qt.AlignCenter)
         self.text.setReadOnly(True)
         self.text.setMaximumWidth(415)
@@ -263,7 +274,8 @@ class MyWidget(QWidget):
         )
         self.title.setMaximumWidth(415)
 
-        #Sets up textbox and defines its dimensions
+        #Sets up an editable textbox for the user to type their question into, they hit submit to start
+        #the processing of their answer
         self.textbox = QLineEdit("")
         self.textbox.setMinimumSize(400, 30)
         self.textbox.setMaximumSize(400, 30)
@@ -307,7 +319,7 @@ class MyWidget(QWidget):
       #Start the thread
       self.thread.start()
 
-      #Resets
+      #Connects functions for when progress is emitted and the thread is finished
       self.button.setEnabled(False)
       self.thread.finished.connect(
           lambda: self.button.setEnabled(True)
@@ -355,23 +367,22 @@ def AICall(promptMessage):
   
 
   #Send the pre-set information to the OpenAI server to return the text completion
-  # response = openai.Completion.create(
-  #   model="text-davinci-002",
-  #   prompt = promptMessage,
-  #   temperature = randomnessVal,
-  #   max_tokens = tokenMax,
-  #   top_p=1,
-  #   frequency_penalty=0,
-  #   presence_penalty=0
-  # )
+  response = openai.Completion.create(
+    model="text-davinci-002",
+    prompt = promptMessage,
+    temperature = randomnessVal,
+    max_tokens = tokenMax,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0
+  )
 
   #This eliminates all the outside information that is given as a response by the OpenAI completion and converts reponse to a string
-  # response = response["choices"][0]["text"]
-  # response = str(response)
-  response = "testing"
+  response = response["choices"][0]["text"]
+  response = str(response)
   return response
 
-#Opens and sets the stylesheet
+#Opens and sets the stylesheet (which sets the global font)
 with open("style.qss", "r") as f:
   _style = f.read()
   app.setStyleSheet(_style)
